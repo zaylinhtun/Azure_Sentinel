@@ -1,0 +1,18 @@
+//Malicious traffic on DNS servers
+DnsInventory
+| where SubType == "Server"
+| project Computer, DomainName, ForestName, ServerIPs
+
+DnsEvents
+| extend IPAddresses = iif(IPAddresses=="", "empty", IPAddresses)
+| where "{IpAddresses:label}" == "All" or IPAddresses in ({IpAddresses})
+| where SubType == 'LookupQuery' and isnotempty(MaliciousIP)
+| summarize Attempts = count() by  Computer,RemoteIPCountry, IndicatorThreatType
+| order by Attempts desc
+
+DnsEvents
+| extend IPAddresses = iif(IPAddresses=="", "empty", IPAddresses)
+| where "{IpAddresses:label}" == "All" or IPAddresses in ({IpAddresses})
+| where SubType == 'LookupQuery' and isnotempty(MaliciousIP)
+| summarize Attempts = count() by ClientIP, MaliciousIP
+| project ClientIP , MaliciousIP, Attempts
