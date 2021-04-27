@@ -1,0 +1,6 @@
+// Event ID 4720 = A user account was created. Event ID 4732 = A member was added to a security-enabled local group.
+
+SecurityEvent
+| where AccountType == "User" 
+| where EventID == "4720" or EventID == "4732"
+| project TargetAccount
