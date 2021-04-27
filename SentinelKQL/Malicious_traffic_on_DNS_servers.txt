@@ -3,16 +3,26 @@ DnsInventory
 | where SubType == "Server"
 | project Computer, DomainName, ForestName, ServerIPs
 
-DnsEvents
-| extend IPAddresses = iif(IPAddresses=="", "empty", IPAddresses)
-| where "{IpAddresses:label}" == "All" or IPAddresses in ({IpAddresses})
-| where SubType == 'LookupQuery' and isnotempty(MaliciousIP)
-| summarize Attempts = count() by  Computer,RemoteIPCountry, IndicatorThreatType
-| order by Attempts desc
 
+//List of DNS Zones
+DnsInventory
+| where SubType == 'Zone'
+| project ZoneName, DynamicUpdate, NameServers, DnsSecSigned
+
+
+//Unused Resource Records
+DnsInventory
+| where SubType == 'ResourceRecord' and ResourceRecordName !in ((DnsEvents
+    | where SubType == 'LookupQuery'
+    | distinct Name))
+    
+
+//Configuration Events
 DnsEvents
-| extend IPAddresses = iif(IPAddresses=="", "empty", IPAddresses)
-| where "{IpAddresses:label}" == "All" or IPAddresses in ({IpAddresses})
-| where SubType == 'LookupQuery' and isnotempty(MaliciousIP)
-| summarize Attempts = count() by ClientIP, MaliciousIP
-| project ClientIP , MaliciousIP, Attempts
+| where SubType == 'ConfigurationChange'
+| project EventId, TimeGenerated, Computer, TaskCategory, Message
+
+//DNS Analytical Log
+DnsEvents
+| where SubType == 'LookupQuery'
+
