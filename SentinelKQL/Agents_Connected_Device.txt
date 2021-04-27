@@ -1,0 +1,6 @@
+//Agented devices 
+
+SigninLogs
+| union Heartbeat
+| where Category == "Direct Agent"
+| summarize by Computer
