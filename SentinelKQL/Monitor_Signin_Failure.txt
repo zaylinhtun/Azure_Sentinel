@@ -1,0 +1,9 @@
+//Monitor for Sign in failure
+//Error 50126 - Invalid username or password or Invalid on-premises username or password.
+//Error 50053 - Account is locked because the user tried to sign in too many times with an incorrect user ID or password.
+
+SigninLogs
+| where ResultType == "50126" or ResultType == "50053"
+| extend IPCustomEntity = IPAddress
+| extend AccountCustomEntity = UserDisplayName
+| summarize count() by UserDisplayName
