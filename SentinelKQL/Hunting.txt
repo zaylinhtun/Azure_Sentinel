@@ -1,0 +1,9 @@
+union SecurityEvent
+| where TimeGenerated > ago(24h)
+| where Computer contains"{hostname}"
+| extend Account= Account
+| extend CommandLine = CommandLine
+| extend CompromisedIP = IpAddress
+| extend CompromisedPort = IpPort
+| extend Loginservice = LogonTypeName
+| extend logonprocess = LogonProcessName
