@@ -1,0 +1,42 @@
+Daily Usage Log Volume
+Usage
+//| where TimeGenerated > startofday(ago(31d))
+| where IsBillable == true
+| summarize TotalVolumeGB = sum(Quantity) / 1000 by bin(TimeGenerated, 1d), Solution
+| summarize sum(TotalVolumeGB)
+//| render barchart
+  
+Data volume for specific events
+Event
+| where TimeGenerated > startofday(ago(31d)) and TimeGenerated < startofday(now()) 
+| where EventID == 5145 or EventID == 5156
+| where _IsBillable == true
+| summarize count(), Bytes=sum(_BilledSize) by EventID, bin(TimeGenerated, 1d)
+
+Data volume by type
+Usage 
+| where TimeGenerated > ago(32d)
+| where StartTime >= startofday(ago(31d)) and EndTime < startofday(now())
+| where IsBillable == true
+| summarize BillableDataGB = sum(Quantity) / 1000 by Solution, DataType
+| sort by Solution asc, DataType asc
+| render columnchart
+
+Data volume by computer
+find where TimeGenerated > ago(24h) project _BilledSize, _IsBillable, Computer, Type
+| where _IsBillable == true and Type != "Usage"
+| extend computerName = tolower(tostring(split(Computer, '.')[0]))
+| summarize BillableDataBytes = sum(_BilledSize) by  computerName 
+| sort by BillableDataBytes desc nulls last
+
+Data volume by resource group
+find where TimeGenerated > ago(24h) project _ResourceId, _BilledSize, _IsBillable
+| where _IsBillable == true 
+| summarize BillableDataBytes = sum(_BilledSize) by _ResourceId
+| extend resourceGroup = tostring(split(_ResourceId, "/")[4] )
+| summarize BillableDataBytes = sum(BillableDataBytes) by resourceGroup | sort by BillableDataBytes nulls last
+
+Track changes made to the daily cap using this query
+_LogOperation 
+| where Operation == "Workspace Configuration" 
+| where Detail contains "Daily quota"
